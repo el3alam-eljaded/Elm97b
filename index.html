@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>شلتنا</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+  // إعدادات Firebase الخاصة بك
+  const firebaseConfig = {
+    apiKey: "AIzaSyCPR78HTgScFR3CA4saI4q...",
+    authDomain: "shilahh-2070a.firebaseapp.com",
+    projectId: "shilahh-2070a",
+    storageBucket: "shilahh-2070a.appspot.com",
+    messagingSenderId: "821617736482",
+    appId: "1:821617736482:web:9a6a4873c...",
+    measurementId: "G-Q65MCYP4SS"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // تعريف المتغيرات العالمية للوصول إليها من HTML
+  window.db = db;
+  window.addDoc = addDoc;
+  window.collection = collection;
+  window.onSnapshot = onSnapshot;
+  window.query = query;
+  window.orderBy = orderBy;
+  window.doc = doc;
+  window.updateDoc = updateDoc;
+  window.deleteDoc = deleteDoc;
+
+  // تشغيل التطبيق بعد تحميل Firebase
+  initAppSync();
+</script>
+
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161923;
+    --surface2: #1e2535;
+    --border: #2a3248;
+    --accent: #f5a623;
+    --accent2: #e8474c;
+    --green: #2ecc7a;
+    --red: #e8474c;
+    --text: #eef0f8;
+    --muted: #7a85a3;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Cairo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(245,166,35,0.07) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(232,71,76,0.07) 0%, transparent 50%);
+  }
+
+  /* ===== LOGIN SCREEN ===== */
+  #login-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+    animation: fadeIn 0.5s ease;
+  }
+
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 440px;
+    text-align: center;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  .logo-icon {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 32px;
+    box-shadow: 0 8px 32px rgba(245,166,35,0.3);
+  }
+
+  .logo-icon svg { width: 36px; height: 36px; fill: white; }
+
+  .login-title {
+    font-family: 'Tajawal', sans-serif;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+
+  .login-sub {
+    color: var(--muted);
+    font-size: 15px;
+    margin-bottom: 36px;
+  }
+
+  .input-field {
+    width: 100%;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    font-size: 15px;
+    padding: 14px 18px;
+    outline: none;
+    transition: border-color 0.2s;
+    text-align: right;
+  }
+
+  .input-field:focus { border-color: var(--accent); }
+  .input-field::placeholder { color: var(--muted); }
+
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), #e09020);
+    border: none;
+    border-radius: 12px;
+    color: #0d0f14;
+    font-family: 'Cairo', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 16px;
+    cursor: pointer;
+    margin-top: 24px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(245,166,35,0.3);
+  }
+
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(245,166,35,0.4); }
+
+  /* ===== MAIN APP ===== */
+  #app-screen { display: none; animation: fadeIn 0.4s ease; }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+  }
+
+  .topbar-brand {
+    font-family: 'Tajawal', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .topbar-user { display: flex; align-items: center; gap: 10px; }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+    flex-shrink: 0;
+  }
+
+  .user-name-tag { font-size: 14px; font-weight: 600; color: var(--text); }
+
+  .logout-btn {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--muted);
+    font-family: 'Cairo', sans-serif;
+    font-size: 12px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .logout-btn:hover { color: var(--red); border-color: var(--red); }
+
+  .main-container { max-width: 700px; margin: 0 auto; padding: 32px 20px; }
+
+  /* ===== ADD PROPOSAL ===== */
+  .add-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .add-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+  }
+
+  .add-card-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .add-card-title svg { width: 18px; height: 18px; fill: var(--accent); }
+
+  .proposal-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: 'Cairo', sans-serif;
+    font-size: 15px;
+    padding: 14px 18px;
+    outline: none;
+    resize: none;
+    min-height: 80px;
+    transition: border-color 0.2s;
+    text-align: right;
+    line-height: 1.6;
+  }
+
+  .proposal-input:focus { border-color: var(--accent); }
+  .proposal-input::placeholder { color: var(--muted); }
+
+  .btn-submit {
+    background: linear-gradient(135deg, var(--accent), #e09020);
+    border: none;
+    border-radius: 10px;
+    color: #0d0f14;
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px 24px;
+    cursor: pointer;
+    margin-top: 12px;
+    transition: all 0.2s;
+    float: left;
+  }
+
+  .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(245,166,35,0.35); }
+
+  /* ===== PROPOSALS LIST ===== */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-family: 'Tajawal', sans-serif; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-size: 13px; }
+  .proposals-list { display: flex; flex-direction: column; gap: 16px; }
+  .proposal-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; transition: border-color 0.2s, transform 0.2s; animation: slideUp 0.3s ease; }
+  .proposal-card:hover { border-color: rgba(245,166,35,0.3); transform: translateY(-2px); }
+  .proposal-header { padding: 20px 20px 0; }
+  .proposal-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .proposal-author { display: flex; align-items: center; gap: 10px; }
+  .author-name { font-size: 14px; font-weight: 700; color: var(--accent); }
+  .proposal-time { font-size: 12px; color: var(--muted); }
+  .proposal-text { font-size: 16px; font-weight: 600; line-height: 1.6; color: var(--text); margin-bottom: 16px; }
+
+  /* ===== VOTE SECTION ===== */
+  .vote-section { padding: 16px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+  .vote-btn { flex: 1; border: 2px solid var(--border); border-radius: 10px; background: var(--surface2); color: var(--muted); font-family: 'Cairo', sans-serif; font-size: 14px; font-weight: 700; padding: 11px 16px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .vote-btn svg { width: 16px; height: 16px; }
+  .vote-btn.yes { border-color: var(--green); color: var(--green); background: rgba(46,204,122,0.08); }
+  .vote-btn.no { border-color: var(--red); color: var(--red); background: rgba(232,71,76,0.08); }
+  .vote-btn.active.yes { background: var(--green); color: white; }
+  .vote-btn.active.no { background: var(--red); color: white; }
+
+  /* ===== ATTENDANCE LIST ===== */
+  .attendance-section { padding: 16px 20px 20px; border-top: 1px solid var(--border); }
+  .att-header { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .att-header svg { width: 14px; height: 14px; fill: var(--muted); }
+  .att-groups { display: flex; flex-direction: column; gap: 10px; }
+  .att-group { display: flex; flex-direction: column; gap: 8px; }
+  .att-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .att-label.coming { color: var(--green); }
+  .att-label.not-coming { color: var(--red); }
+  .att-names { display: flex; flex-wrap: wrap; gap: 8px; }
+  .att-chip { border-radius: 8px; font-size: 13px; font-weight: 600; padding: 5px 12px; display: flex; align-items: center; gap: 6px; }
+  .att-chip.coming { background: rgba(46,204,122,0.1); border: 1px solid rgba(46,204,122,0.3); color: var(--green); }
+  .att-chip.not-coming { background: rgba(232,71,76,0.1); border: 1px solid rgba(232,71,76,0.3); color: var(--red); }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+  .empty-state-icon { width: 64px; height: 64px; background: var(--surface2); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+  .empty-state-icon svg { width: 32px; height: 32px; fill: var(--muted); }
+  .delete-btn { background: none; border: none; cursor: pointer; color: var(--muted); padding: 4px; border-radius: 6px; transition: all 0.2s; display: flex; align-items: center; }
+  .delete-btn:hover { color: var(--red); background: rgba(232,71,76,0.1); }
+  .delete-btn svg { width: 16px; height: 16px; fill: currentColor; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 24px; font-size: 14px; font-weight: 600; color: var(--text); z-index: 999; transition: transform 0.3s ease; white-space: nowrap; box-shadow: 0 16px 48px rgba(0,0,0,0.4); }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--green); color: var(--green); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 480px) {
+    .login-card { padding: 32px 24px; }
+    .topbar { padding: 0 16px; }
+    .main-container { padding: 20px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+    </div>
+    <h1 class="login-title">شلة الهرمونات</h1>
+    <p class="login-sub">اكتب اسمك والي نعرفوك بيه وبلا فله 
+ </p>
+    <input type="text" class="input-field" id="custom-name" placeholder="اكتب اسمك هنا..." maxlength="20" />
+    <button class="btn-primary" onclick="login()">دخول</button>
+  </div>
+</div>
+
+<div id="app-screen">
+  <nav class="topbar">
+    <div class="topbar-brand">شلة الهرمونات</div>
+    <div class="topbar-user">
+      <div class="avatar" id="nav-avatar"></div>
+      <span class="user-name-tag" id="nav-name"></span>
+      <button class="logout-btn" onclick="logout()">خروج</button>
+    </div>
+  </nav>
+
+  <div class="main-container">
+    <div class="add-card">
+      <div class="add-card-title">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        اقترح فعالية
+      </div>
+      <textarea class="proposal-input" id="proposal-text" placeholder="مثال: وش رايكم نتنايج؟" rows="3"></textarea>
+      <div style="overflow:hidden">
+        <button class="btn-submit" onclick="addProposal()">انشر المقترح</button>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <span class="section-title">المقترحات</span>
+    </div>
+    <div class="proposals-list" id="proposals-list"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let currentUser = localStorage.getItem('shilla_user') || null;
+  let allProposals = [];
+
+  // دالة المزامنة مع Firebase
+  function initAppSync() {
+    const q = window.query(window.collection(window.db, "proposals"), window.orderBy("timestamp", "desc"));
+    window.onSnapshot(q, (snapshot) => {
+      allProposals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderProposals();
+    });
+  }
+
+  function login() {
+    const name = document.getElementById('custom-name').value.trim();
+    if (!name) { showToast('اكتب اسمك أولاً', 'error'); return; }
+    currentUser = name;
+    localStorage.setItem('shilla_user', name);
+    startApp();
+  }
+
+  function logout() {
+    currentUser = null;
+    localStorage.removeItem('shilla_user');
+    document.getElementById('app-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+  }
+
+  function startApp() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    document.getElementById('nav-name').textContent = currentUser;
+    document.getElementById('nav-avatar').textContent = currentUser.charAt(0);
+    renderProposals();
+  }
+
+  async function addProposal() {
+    const text = document.getElementById('proposal-text').value.trim();
+    if (!text) { showToast('اكتب المقترح أولاً', 'error'); return; }
+
+    try {
+      await window.addDoc(window.collection(window.db, "proposals"), {
+        author: currentUser,
+        text: text,
+        timestamp: Date.now(),
+        timeStr: new Date().toLocaleString('ar-SA', { dateStyle: 'short', timeStyle: 'short' }),
+        votes: {}
+      });
+      document.getElementById('proposal-text').value = '';
+      showToast('تم نشر المقترح', 'success');
+    } catch (e) { showToast('خطأ في النشر', 'error'); }
+  }
+
+  async function vote(id, decision) {
+    const proposal = allProposals.find(p => p.id === id);
+    let newVotes = { ...proposal.votes };
+
+    if (newVotes[currentUser] === decision) {
+      delete newVotes[currentUser];
+    } else {
+      newVotes[currentUser] = decision;
+    }
+
+    await window.updateDoc(window.doc(window.db, "proposals", id), { votes: newVotes });
+  }
+
+  async function deleteProposal(id) {
+    const proposal = allProposals.find(p => p.id === id);
+    if (proposal.author !== currentUser) { showToast('لا يمكنك حذف مقترح غيرك', 'error'); return; }
+    await window.deleteDoc(window.doc(window.db, "proposals", id));
+    showToast('تم حذف المقترح');
+  }
+
+  function renderProposals() {
+    const list = document.getElementById('proposals-list');
+    if (!list) return;
+
+    if (allProposals.length === 0) {
+      list.innerHTML = `<div class="empty-state"><p>لا يوجد مقترحات بعد، كن الأول!</p></div>`;
+      return;
+    }
+
+    list.innerHTML = allProposals.map(p => {
+      const votes = p.votes || {};
+      const yesVoters = Object.entries(votes).filter(([,v]) => v === 'yes').map(([k]) => k);
+      const noVoters = Object.entries(votes).filter(([,v]) => v === 'no').map(([k]) => k);
+      const myVote = votes[currentUser];
+
+      return `
+        <div class="proposal-card">
+          <div class="proposal-header">
+            <div class="proposal-meta">
+              <div class="proposal-author">
+                <div class="avatar" style="width:32px;height:32px;font-size:13px">${p.author.charAt(0)}</div>
+                <span class="author-name">${p.author}</span>
+                <span class="proposal-time">${p.timeStr}</span>
+              </div>
+              ${p.author === currentUser ? `<button class="delete-btn" onclick="deleteProposal('${p.id}')"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>` : ''}
+            </div>
+            <div class="proposal-text">${p.text}</div>
+          </div>
+          <div class="vote-section">
+            <button class="vote-btn yes ${myVote === 'yes' ? 'active' : ''}" onclick="vote('${p.id}', 'yes')">جاي (${yesVoters.length})</button>
+            <button class="vote-btn no ${myVote === 'no' ? 'active' : ''}" onclick="vote('${p.id}', 'no')">مش جاي (${noVoters.length})</button>
+          </div>
+          ${(yesVoters.length > 0 || noVoters.length > 0) ? `
+          <div class="attendance-section">
+            <div class="att-groups">
+              ${yesVoters.length > 0 ? `<div class="att-group"><span class="att-label coming">جايين</span><div class="att-names">${yesVoters.map(n => `<span class="att-chip coming">${n}</span>`).join('')}</div></div>` : ''}
+              ${noVoters.length > 0 ? `<div class="att-group"><span class="att-label not-coming">مش جايين</span><div class="att-names">${noVoters.map(n => `<span class="att-chip not-coming">${n}</span>`).join('')}</div></div>` : ''}
+            </div>
+          </div>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  function showToast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' show';
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  if (currentUser) startApp();
+</script>
+</body>
+</html>
